@@ -38,7 +38,7 @@ String multipleVariableParser(char **values, int valueCount, bool udppackets)
     Serial.print(values[i]);
     int jj;
     sscanf(values[i], "%d", &jj);
-    Serial.printf("the value is %d\n", jj);
+    Serial.printf(" the value is %d\n", jj);
   }
   return ("MVP is done   ");
 }

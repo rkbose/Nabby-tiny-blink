@@ -20,7 +20,17 @@
 #include <DynamicCommandParser.h>
 #include <Parsers.h>
 
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+//#include <Adafruit_SH110X.h>
+#include <Adafruit_SSD1306.h>
 
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+// SH1106 uses 132x64 internally, but we draw 128x64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 #define VERSION "20Jun2026a"
 String version;
@@ -98,6 +108,20 @@ void setup()
   dcp_udp.addParser("inf", getInfo);
 
 pinMode(LED_BUILTIN, OUTPUT);
+pinMode(21, OUTPUT);
+pinMode(22, OUTPUT);
+pinMode(23, OUTPUT);
+
+  Wire.begin(22, 23);  // XIAO ESP32C6: SDA=6, SCL=7
+
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3c, true);  // I2C address 0x3C
+  display.clearDisplay();
+
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Hello!");
+  display.display();
 
   Serial.println("end of setup()");
 }
@@ -108,9 +132,11 @@ char c;
 void loop()
 {
   digitalWrite(LED_BUILTIN, HIGH);
-delay(1000);
+  digitalWrite(21, HIGH);
+delay(300);
   digitalWrite(LED_BUILTIN, LOW);
-delay(1000);
+  digitalWrite(21, LOW);
+delay(300);
 
   while (Serial.available() > 0)
   {
