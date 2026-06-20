@@ -1,1 +1,0 @@
-Schematic files. The doorbell unit schematic is the previous version without the TFT. Schematic documentation will be updated in the future.
