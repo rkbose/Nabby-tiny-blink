@@ -25,7 +25,7 @@
 
 // #include <freertos/timers.h>
 
-#define VERSION "25Dec2024a"
+#define VERSION "20Jun2026a"
 String version;
 
 #define MP3_SERIAL_SPEED 9600  // DFPlayer Mini suport only 9600-baud
