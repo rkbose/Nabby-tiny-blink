@@ -11,14 +11,6 @@ void printParserCommands(void);
 String multipleVariableParser(char **values, int valueCount, bool udppackets);
 String getInfo(char **values, int valueCount, bool udppackets);
 String printHelp(char **values, int valuecount, bool udppackets);
-String selectTrack(char **values, int valueCount, bool udppackets);
-String setVolume(char **values, int valueCount, bool udppackets);
-String playAllTracks(char **values, int valueCount, bool udppackets);
-String RingBell(char **values, int valueCount, bool udppackets);
-String Ping(char **values, int valueCount, bool udppackets);
-String LeftEar(char **values, int valueCount, bool udppackets);
-String RightEar(char **values, int valueCount, bool udppackets);
-String StopEars(char **values, int valueCount, bool udppackets);
 
 
 #endif

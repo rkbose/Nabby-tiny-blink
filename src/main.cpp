@@ -1,7 +1,6 @@
 //
-// Nabby-tiny ESP32 based by RKB  
-// Board used: ESP32Dev module. Baudrate: 115200
-// (COM4 on ACER and HP, right-usb-poort; not all usb-cables are OK)
+// Nabby-tiny-blink ESP32 based by RKB  
+
 //
 // Copyright 2022, Raj Bose
 //
@@ -17,23 +16,15 @@
 #include <AsyncUDP.h>
 #include <Secret.h>
 #include <ESPmDNS.h>
-#include <dfplayer.h>
+
 #include <DynamicCommandParser.h>
 #include <Parsers.h>
-#include <Watchdog.h>
-#include <Nabby.h>
 
-// #include <freertos/timers.h>
+
 
 #define VERSION "20Jun2026a"
 String version;
 
-#define MP3_SERIAL_SPEED 9600  // DFPlayer Mini suport only 9600-baud
-#define MP3_SERIAL_TIMEOUT 100 // average DFPlayer response timeout 100msec..200msec
-DFPlayer mp3;                  // connect DFPlayer RX-pin to GPIO15(TX) & DFPlayer TX-pin to GPIO13(RX)
-uint8_t response = 0;
-#define RXD2 16
-#define TXD2 17
 
 // Initialize the command parsers using the start, end, delimiting characters
 // A seperate parser is instantiated for UDP. This is strictly not neccesry, but had advantages like:
@@ -70,28 +61,9 @@ void connectWifi()
   Serial.print(";   IP addr: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("Nabby-mini-speaker"))
-  {
-    MDNS.addService("mydoorbell", "udp", 1235); // Announce service on port x
-    Serial.println("MDNS responder started");
-  }
 }
 
-int finddoorbell(void) // find doorbell and send scan MDNS command
-{
-  WiFiUDP wifiudp;
-  int n = MDNS.queryService("doorbell", "udp"); // Send query for mydoorbell services
- // Serial.println("mDNS query done");
-  if (n > 0)
-  {
-    // send MDNS scan command
-    wifiudp.beginPacket(MDNS.IP(0), MDNS.port(0)); // send udp packet to doorbell
-    wifiudp.print("/mdns\r");
-    wifiudp.endPacket();
-    delay(100);
-  }
-  return (n);
-}
+
 
 void handleUdp()
 {
@@ -111,96 +83,41 @@ void setup()
 {
   version = VERSION;
   Serial.begin(115200); // debug interface
-  Serial.print("\nNabby-tiny is starting\n");
-
-  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2); // MP# interface connection
+  Serial.print("\nNabby-tiny-blink is starting\n");
 
   connectWifi(); // connect to WiFi access point
                  //  delay(2000);
-  int nr = finddoorbell();
-  if (nr == 0)
-    Serial.println("no MDNS 'doorbell' services found");
-  else
-  {
-    Serial.printf("Found %d 'doorbell' services", nr);
-    Serial.println("=> Sending MDNS scan cmd to doorbell\n"); // Request all found doorbell units to perform an mdns scan. This will register the Nabby in the doorbell unit
-  }
-
-  mp3.begin(Serial2, MP3_SERIAL_TIMEOUT, DFPLAYER_MINI, false); // DFPLAYER_MINI see NOTE, false=no response from module after the command
-  mp3.stop();                                                   // if player was runing during ESP8266 reboot
-  delay(100);
-  mp3.reset(); // reset all setting to default
-  delay(100);
-  mp3.setSource(2);  // 1=USB-Disk, 2=TF-Card, 3=Aux, 4=Sleep, 5=NOR Flash
-                     // delay(500);
-  mp3.setVolume(25); // 0..30, module persists volume on power failure
-  delay(500);
-  mp3.setEQ(2);
-  delay(500);
-  mp3.wakeup(2); // exit standby mode & initialize sourse 1=USB-Disk, 2=TF-Card, 3=Aux, 5=NOR Flash
-  delay(500);
 
   // Add the parser commands to the DynamicCommandParser
   dcp_ser.addParser("inf", getInfo);
   dcp_ser.addParser("hlp", printHelp);
   dcp_ser.addParser("mvp", multipleVariableParser);
-  dcp_ser.addParser("tra", selectTrack);
-  dcp_ser.addParser("all", playAllTracks);
-  dcp_ser.addParser("vol", setVolume);
-  dcp_ser.addParser("rng", RingBell);
-  dcp_ser.addParser("png", Ping);
-  dcp_ser.addParser("lft", LeftEar);
-  dcp_ser.addParser("rgt", RightEar);
-  dcp_ser.addParser("stp", StopEars);
+
   printParserCommands();
 
   dcp_udp.addParser("inf", getInfo);
-  dcp_udp.addParser("tra", selectTrack);
-  dcp_udp.addParser("all", playAllTracks);
-  dcp_udp.addParser("vol", setVolume);
-  dcp_udp.addParser("rng", RingBell);
-  dcp_udp.addParser("png", Ping);
-  dcp_udp.addParser("lft", LeftEar);
-  dcp_udp.addParser("rgt", RightEar);
-  dcp_udp.addParser("stp", StopEars);
 
-  initNabby();
-
-  wdInit(60000); // initilize watchdog timeout on 60 seconds
+pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.println("end of setup()");
 }
 
 int i = 0;
 char c;
-unsigned long lastWDtrigger = 0;
 
 void loop()
 {
-  blinkLeds();
+  digitalWrite(LED_BUILTIN, HIGH);
+delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+delay(1000);
+
   while (Serial.available() > 0)
   {
     c = Serial.read();
     Serial.print(c);
     dcp_ser.appendChar(c);
-    //   dcp_ser.appendChar(c);
   }
   handleUdp(); // handle and parse commands received via UDP
 
-  if (millis() - lastWDtrigger >= 10000) // check watchdog every 10 second. This is same timeinterval for mdnsScan
-  {
-    lastWDtrigger = millis();
-
-    if (wdStatus())
-    {
-      //  Serial.printf("... Watchdog Expired\n");
-      int nr = finddoorbell();
-      //  if (nr == 0)
-      //   Serial.println("no MDNS 'doorbell' services found");
-
-      // else
-      //      Serial.printf("Found %d 'doorbell' services", nr);
-      //   Serial.println("=> Sending MDNS scan cmd to doorbell\n"); // Request all found doorbell units to perform an mdns scan. This will register the Nabby in the doorbell unit
-    }
-  }
 }
