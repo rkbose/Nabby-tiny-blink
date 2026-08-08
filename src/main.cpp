@@ -1,5 +1,5 @@
 //
-// Nabby-tiny-blink ESP32 based by RKB  
+// Nabby-tiny-blink ESP32 based by RKB
 
 //
 // Copyright 2022, Raj Bose
@@ -21,20 +21,16 @@
 #include <Parsers.h>
 
 #include <Wire.h>
-#include <Adafruit_GFX.h>
-//#include <Adafruit_SH110X.h>
-#include <Adafruit_SSD1306.h>
+#include <U8g2lib.h>
 
+U8G2_SH1106_64X32_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+/* WEMOS D1 mini OLED is a 0.49-inch display with a resolution of 64x32 pixels. Utilizes an SSD1306 */
+#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 32
 
-// SH1106 uses 132x64 internally, but we draw 128x64
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-#define VERSION "20Jun2026a"
+#define VERSION "8Aug2026a"
 String version;
-
 
 // Initialize the command parsers using the start, end, delimiting characters
 // A seperate parser is instantiated for UDP. This is strictly not neccesry, but had advantages like:
@@ -70,10 +66,7 @@ void connectWifi()
   Serial.print(WiFi.SSID());
   Serial.print(";   IP addr: ");
   Serial.println(WiFi.localIP());
-
 }
-
-
 
 void handleUdp()
 {
@@ -89,6 +82,58 @@ void handleUdp()
   }
 }
 
+#define LEFT_EYE_X 16
+#define LEFT_EYE_Y 15
+#define RIGHT_EYE_X (SCREEN_WIDTH-LEFT_EYE_X)
+#define RIGHT_EYE_Y 15
+
+#define NOSE_X (SCREEN_WIDTH/2)
+#define NOSE_Y 28
+
+#define txt_X 0
+#define txt_Y 30  
+ 
+void eyes(int mood)
+{
+ 
+u8g2.clearDisplay();
+u8g2.setFont(u8g2_font_5x7_tr);
+
+  switch (mood)
+  {
+  case 0: // normal
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 10, U8G2_DRAW_ALL);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 10, U8G2_DRAW_ALL);
+    u8g2.drawStr(txt_X, txt_Y, "norm");
+    break;
+
+case 1: // BLINK
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 2);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 10);
+u8g2.drawStr(txt_X, txt_Y, "blink");
+    break;
+
+  case 2: // sleepy
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 2);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 2);
+    u8g2.drawStr(txt_X, txt_Y, "sleep");
+    break;
+
+  case 3: // angry
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 10, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 10,U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
+    u8g2.drawStr(txt_X, txt_Y, "angry");
+    break;
+  default:
+    break;
+  }
+//nose
+  u8g2.drawFilledEllipse(NOSE_X, NOSE_Y, 2, 4);
+
+  u8g2.sendBuffer();
+}
+
+
 void setup()
 {
   version = VERSION;
@@ -102,26 +147,31 @@ void setup()
   dcp_ser.addParser("inf", getInfo);
   dcp_ser.addParser("hlp", printHelp);
   dcp_ser.addParser("mvp", multipleVariableParser);
-
   printParserCommands();
 
   dcp_udp.addParser("inf", getInfo);
 
-pinMode(LED_BUILTIN, OUTPUT);
-pinMode(21, OUTPUT);
-pinMode(22, OUTPUT);
-pinMode(23, OUTPUT);
+  gpio_reset_pin(GPIO_NUM_22); // disable old pin function on GPIO22
+  gpio_reset_pin(GPIO_NUM_23); // disable old pin function on GPIO23
+  ;
+  gpio_set_drive_capability(GPIO_NUM_22, GPIO_DRIVE_CAP_2); // Set GPIO22 drive capability to default (medium)
+  ;
+  gpio_set_drive_capability(GPIO_NUM_23, GPIO_DRIVE_CAP_2); // Set GPIO23 drive capability to default (medium)
 
-  Wire.begin(22, 23);  // XIAO ESP32C6: SDA=6, SCL=7
+  pinMode(LED_BUILTIN, OUTPUT); // GPIO2 is connected to the on-board LED on the XIAO ESP32C6 board
+  pinMode(21, OUTPUT);          // GPIO21 is connected to the external LED connected to the XIAO ESP32C6 board
+  ;
+  pinMode(22, OUTPUT); // SDA on the XIAO ESP32C6 board
+  ;
+  pinMode(23, OUTPUT); // SCL on the XIAO ESP32C6 board
 
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3c, true);  // I2C address 0x3C
-  display.clearDisplay();
-
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.println("Hello!");
-  display.display();
+  Wire.begin(22, 23); // XIAO ESP32C6: SDA=6, SCL=7
+  u8g2.begin();
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(0, 10, "Hello R!");
+  //u8g2.drawEllipse(32, 16, 10, 10);
+  u8g2.sendBuffer();
 
   Serial.println("end of setup()");
 }
@@ -131,12 +181,20 @@ char c;
 
 void loop()
 {
+  eyes(i); // happy eyes
+  i++;
+  if (i > 3)
+  {
+    i = 0;
+  }
   digitalWrite(LED_BUILTIN, HIGH);
   digitalWrite(21, HIGH);
-delay(300);
+
+  delay(1000);
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(21, LOW);
-delay(300);
+
+  delay(500);
 
   while (Serial.available() > 0)
   {
@@ -145,5 +203,4 @@ delay(300);
     dcp_ser.appendChar(c);
   }
   handleUdp(); // handle and parse commands received via UDP
-
 }
