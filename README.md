@@ -1,11 +1,11 @@
-Nabaztag-messenger Nabby a Nabaztag rabbit based messenger Project
-created by Raj Bose, July 2020
+Nabaztag-messenger, Nabby and derivative version are Nabaztag hare based messenger projects, 
+created by Raj Bose. first design started in July 2020
 
-This Nabby blink version is intended as a companion Nabby, with display.
+This repo is a Nabby blink version and is intended as a companion Nabby with display. Display function primary function is eye and nose animation.
 
-Board used: Seeed Studio XIAO ESP32C6. Baudrate: 115200
-This board is not supported by platformio with arduino environment. 
-Therefore pioarduino, a fork of PlatformIO that does support the latest ESP32 Arduino core (v3), including the ESP32‑C6 is used.
+Board used: Seeed Studio XIAO ESP32C6.
+This board is not supported by platformio with arduino environment. Therefore pioarduino, a fork of PlatformIO that does support the latest ESP32 Arduino core (v3), including the ESP32‑C6 is used.
 
 
-Nabby-tiny is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Nabby-tiny is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Nabby-tiny. If not, see https://www.gnu.org/licenses/.
+Nabby hardware and software projects are free/libre works: you may redistribute them and/or modify them under the terms of the GNU General Public License (GPL) as published by the Free Software Foundation, either version 3 of the License or any later version. This includes source code, firmware, hardware designs, schematics, PCB layouts, and related documentation, unless a specific component is explicitly marked otherwise.
+Nabby projects are distributed in the hope that they will be useful, but without any warranty; without even the implied warranty of merchantability, fitness for a particular purpose, or non‑infringement. For the complete license text, see the GNU General Public License at: https://www.gnu.org/licenses/
