@@ -22,14 +22,18 @@
 
 #include <Wire.h>
 #include <U8g2lib.h>
+#include <Nabby.h>
 
-U8G2_SH1106_64X32_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+// U8G2_SH1106_64X32_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+// U8G2_SSD1306_64X48_ER_1_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+// U8G2_SSD1306_64X32_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE); // 128x64 display
 
 /* WEMOS D1 mini OLED is a 0.49-inch display with a resolution of 64x32 pixels. Utilizes an SSD1306 */
 #define SCREEN_WIDTH 64
-#define SCREEN_HEIGHT 32
+#define SCREEN_HEIGHT 128
 
-#define VERSION "8Aug2026a"
+#define VERSION "22Aug2026a"
 String version;
 
 // Initialize the command parsers using the start, end, delimiting characters
@@ -82,57 +86,66 @@ void handleUdp()
   }
 }
 
-#define LEFT_EYE_X 16
-#define LEFT_EYE_Y 15
-#define RIGHT_EYE_X (SCREEN_WIDTH-LEFT_EYE_X)
-#define RIGHT_EYE_Y 15
 
-#define NOSE_X (SCREEN_WIDTH/2)
-#define NOSE_Y 28
+#define EYE_WIDTH 3
+#define EYE_HEIGHT 6
 
-#define txt_X 0
-#define txt_Y 30  
- 
+#define LEFT_EYE_X 24
+#define LEFT_EYE_Y 63
+#define RIGHT_EYE_X (SCREEN_WIDTH - LEFT_EYE_X)
+#define RIGHT_EYE_Y 63
+
+#define NOSE_X (SCREEN_WIDTH / 2)
+#define NOSE_Y 73
+
+#define txt_X 20
+#define txt_Y 100
+
 void eyes(int mood)
 {
- 
-u8g2.clearDisplay();
-u8g2.setFont(u8g2_font_5x7_tr);
+  u8g2.clearDisplay();
+  u8g2.setDrawColor(0);
+u8g2.drawXBM( 2, 15, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
+  u8g2.setDrawColor(0);
+  u8g2.setFont(u8g2_font_5x7_tr);
+
+  // u8g2.setDrawColor(1);
+  // u8g2.drawBox(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // draw a filled box to clear the display
+  // u8g2.setDrawColor(0); // set draw color to black for the eyes and text
 
   switch (mood)
   {
   case 0: // normal
-    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 10, U8G2_DRAW_ALL);
-    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 10, U8G2_DRAW_ALL);
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
     u8g2.drawStr(txt_X, txt_Y, "norm");
     break;
 
-case 1: // BLINK
-    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 2);
-    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 10);
-u8g2.drawStr(txt_X, txt_Y, "blink");
+  case 1: // BLINK
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, 2);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.drawStr(txt_X, txt_Y, "blink");
     break;
 
   case 2: // sleepy
-    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 2);
-    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 2);
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, 2);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, 2);
     u8g2.drawStr(txt_X, txt_Y, "sleep");
     break;
 
   case 3: // angry
-    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, 5, 10, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
-    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, 5, 10,U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
     u8g2.drawStr(txt_X, txt_Y, "angry");
     break;
   default:
     break;
   }
-//nose
+  // nose
   u8g2.drawFilledEllipse(NOSE_X, NOSE_Y, 2, 4);
 
   u8g2.sendBuffer();
 }
-
 
 void setup()
 {
@@ -165,12 +178,32 @@ void setup()
   ;
   pinMode(23, OUTPUT); // SCL on the XIAO ESP32C6 board
 
-  Wire.begin(22, 23); // XIAO ESP32C6: SDA=6, SCL=7
+  Wire.begin(22, 23, 100000); // XIAO ESP32C6: SDA=6, SCL=7
+  u8g2.setBusClock(100000);
   u8g2.begin();
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setDrawColor(1);
   u8g2.drawStr(0, 10, "Hello R!");
-  //u8g2.drawEllipse(32, 16, 10, 10);
+  // u8g2.drawEllipse(32, 16, 10, 10);
+u8g2.setDrawColor(0);
+u8g2.drawXBM( 2, 15, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
+
+
+//u8g2.drawXBM( 10, 10, u8g_logo_width, u8g_logo_height, u8g_logo_bits);
+//  u8g2.drawXBM(10, 40, 50, 83, bitmap_nabby_BW_50x83);
+
+/*
+#define test_width 16
+#define test_height 7
+static unsigned char test_bits[] = {
+0x13, 0x00, 0x15, 0x00, 0x93, 0xcd, 0x55, 0xa5, 0x93, 0xc5, 0x00, 0x80,
+0x00, 0x60 };
+u8g2.drawXBM( 10, 10, test_width, test_height, test_bits);
+*/
+
+
+
   u8g2.sendBuffer();
 
   Serial.println("end of setup()");
@@ -181,7 +214,7 @@ char c;
 
 void loop()
 {
-  eyes(i); // happy eyes
+  eyes(i);
   i++;
   if (i > 3)
   {
