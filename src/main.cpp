@@ -33,7 +33,7 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE); // 128x64 disp
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 128
 
-#define VERSION "22Aug2026a"
+#define VERSION "27Sep2026"
 String version;
 
 // Initialize the command parsers using the start, end, delimiting characters
@@ -48,7 +48,7 @@ DynamicCommandParser dcp_udp('/', 0x0D, ','); // parser for udp
 AsyncUDP udp;
 WiFiMulti wifiMulti;
 
-void connectWifi()
+bool connectWifi()
 {
   WiFi.mode(WIFI_STA); // Set WiFi to station mode and disconnect from an AP if it was previously connected
   WiFi.disconnect();
@@ -59,8 +59,14 @@ void connectWifi()
   // wifiMulti.addAP(SSID3, PSW3); // more routers can be registered, strongest RSSI will be selected. SSID needs definition in secret.h
 
   Serial.print("Connecting Wifi -");
+  const unsigned long wifiTimeout = millis() + 20000;
   while (wifiMulti.run() != WL_CONNECTED)
   {
+    if (millis() >= wifiTimeout)
+    {
+      Serial.println(" timeout");
+      return false;
+    }
     delay(500);
     Serial.print(".");
   }
@@ -70,6 +76,7 @@ void connectWifi()
   Serial.print(WiFi.SSID());
   Serial.print(";   IP addr: ");
   Serial.println(WiFi.localIP());
+  return true;
 }
 
 void handleUdp()
@@ -86,7 +93,6 @@ void handleUdp()
   }
 }
 
-
 #define EYE_WIDTH 3
 #define EYE_HEIGHT 6
 
@@ -99,19 +105,14 @@ void handleUdp()
 #define NOSE_Y 73
 
 #define txt_X 20
-#define txt_Y 100
+#define txt_Y 15
 
 void eyes(int mood)
 {
-  u8g2.clearDisplay();
-  u8g2.setDrawColor(0);
-u8g2.drawXBM( 2, 15, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
-  u8g2.setDrawColor(0);
-  u8g2.setFont(u8g2_font_5x7_tr);
-
-  // u8g2.setDrawColor(1);
-  // u8g2.drawBox(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // draw a filled box to clear the display
-  // u8g2.setDrawColor(0); // set draw color to black for the eyes and text
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(LEFT_EYE_X-10, LEFT_EYE_Y-10, 40, 40); // draw a filled box to clear the eyes
+  u8g2.setDrawColor(0); // set draw color to black for the eyes and text
+  u8g2.drawBox(0,0,SCREEN_WIDTH,10); // clear the entire text area at the top of the display
 
   switch (mood)
   {
@@ -186,23 +187,24 @@ void setup()
   u8g2.setDrawColor(1);
   u8g2.drawStr(0, 10, "Hello R!");
   // u8g2.drawEllipse(32, 16, 10, 10);
-u8g2.setDrawColor(0);
-u8g2.drawXBM( 2, 15, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
+  u8g2.setDrawColor(0);
+  u8g2.drawXBM(2, 15, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
 
+  //u8g2.clearDisplay();
+  u8g2.setDrawColor(0);
+  u8g2.setFont(u8g2_font_6x10_tf);
 
-//u8g2.drawXBM( 10, 10, u8g_logo_width, u8g_logo_height, u8g_logo_bits);
-//  u8g2.drawXBM(10, 40, 50, 83, bitmap_nabby_BW_50x83);
+  // u8g2.drawXBM( 10, 10, u8g_logo_width, u8g_logo_height, u8g_logo_bits);
+  //   u8g2.drawXBM(10, 40, 50, 83, bitmap_nabby_BW_50x83);
 
-/*
-#define test_width 16
-#define test_height 7
-static unsigned char test_bits[] = {
-0x13, 0x00, 0x15, 0x00, 0x93, 0xcd, 0x55, 0xa5, 0x93, 0xc5, 0x00, 0x80,
-0x00, 0x60 };
-u8g2.drawXBM( 10, 10, test_width, test_height, test_bits);
-*/
-
-
+  /*
+  #define test_width 16
+  #define test_height 7
+  static unsigned char test_bits[] = {
+  0x13, 0x00, 0x15, 0x00, 0x93, 0xcd, 0x55, 0xa5, 0x93, 0xc5, 0x00, 0x80,
+  0x00, 0x60 };
+  u8g2.drawXBM( 10, 10, test_width, test_height, test_bits);
+  */
 
   u8g2.sendBuffer();
 
