@@ -96,53 +96,58 @@ void handleUdp()
 #define EYE_WIDTH 3
 #define EYE_HEIGHT 6
 
-#define LEFT_EYE_X 24
-#define LEFT_EYE_Y 63
-#define RIGHT_EYE_X (SCREEN_WIDTH - LEFT_EYE_X)
-#define RIGHT_EYE_Y 63
+#define LEFT_EYE_X 32
+#define LEFT_EYE_Y 68
+#define RIGHT_EYE_X (LEFT_EYE_X+16)
+#define RIGHT_EYE_Y 68
 
-#define NOSE_X (SCREEN_WIDTH / 2)
-#define NOSE_Y 73
+#define NOSE_X (LEFT_EYE_X+8)
+#define NOSE_Y 80
 
-#define txt_X 20
-#define txt_Y 15
+#define txt_X 25
+#define txt_Y 19
 
 void eyes(int mood)
 {
   u8g2.setDrawColor(1);
-  u8g2.drawBox(LEFT_EYE_X-10, LEFT_EYE_Y-10, 40, 40); // draw a filled box to clear the eyes
-  u8g2.setDrawColor(0); // set draw color to black for the eyes and text
-  u8g2.drawBox(0,0,SCREEN_WIDTH,10); // clear the entire text area at the top of the display
+  u8g2.drawBox(LEFT_EYE_X - 10, LEFT_EYE_Y - 10, 30, 40); // draw a filled box to clear the eyes
+  u8g2.setDrawColor(0);                                   // set draw color to black for the eyes and text
+  u8g2.drawBox(0, 0, SCREEN_WIDTH, 10);                   // clear the entire text area at the top of the display
 
   switch (mood)
   {
   case 0: // normal
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
-    u8g2.drawStr(txt_X, txt_Y, "norm");
+    u8g2.setDrawColor(1);
+  //  u8g2.drawStr(txt_X, txt_Y, "norm");
     break;
 
   case 1: // BLINK
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, 2);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
-    u8g2.drawStr(txt_X, txt_Y, "blink");
+    u8g2.setDrawColor(1);
+  //  u8g2.drawStr(txt_X, txt_Y, "blink");
     break;
 
   case 2: // sleepy
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, 2);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, 2);
-    u8g2.drawStr(txt_X, txt_Y, "sleep");
+    u8g2.setDrawColor(1);
+   // u8g2.drawStr(txt_X, txt_Y, "sleep");
     break;
 
   case 3: // angry
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
-    u8g2.drawStr(txt_X, txt_Y, "angry");
+    u8g2.setDrawColor(1);
+   // u8g2.drawStr(txt_X, txt_Y, "angry");
     break;
   default:
     break;
   }
   // nose
+  u8g2.setDrawColor(0);
   u8g2.drawFilledEllipse(NOSE_X, NOSE_Y, 2, 4);
 
   u8g2.sendBuffer();
@@ -173,24 +178,28 @@ void setup()
   gpio_set_drive_capability(GPIO_NUM_23, GPIO_DRIVE_CAP_2); // Set GPIO23 drive capability to default (medium)
 
   pinMode(LED_BUILTIN, OUTPUT); // GPIO2 is connected to the on-board LED on the XIAO ESP32C6 board
-  pinMode(21, OUTPUT);          // GPIO21 is connected to the external LED connected to the XIAO ESP32C6 board
-  ;
+  // pinMode(21, OUTPUT);          // GPIO21 is connected to the external LED connected to the XIAO ESP32C6 board
+
+  pinMode(A0, INPUT); // Configure A0 as ADC input for Battery measurement
+
   pinMode(22, OUTPUT); // SDA on the XIAO ESP32C6 board
-  ;
   pinMode(23, OUTPUT); // SCL on the XIAO ESP32C6 board
 
   Wire.begin(22, 23, 100000); // XIAO ESP32C6: SDA=6, SCL=7
   u8g2.setBusClock(100000);
   u8g2.begin();
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tf);
+
+  u8g2.setFlipMode(1); // flip the display vertically
+  //u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setFont(u8g2_font_7x13_tf);
   u8g2.setDrawColor(1);
-  u8g2.drawStr(0, 10, "Hello R!");
+  //u8g2.drawStr(0, 10, "Hello R!");
   // u8g2.drawEllipse(32, 16, 10, 10);
   u8g2.setDrawColor(0);
-  u8g2.drawXBM(2, 15, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
+  u8g2.drawXBM(10, 20, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
 
-  //u8g2.clearDisplay();
+  // u8g2.clearDisplay();
   u8g2.setDrawColor(0);
   u8g2.setFont(u8g2_font_6x10_tf);
 
@@ -223,11 +232,19 @@ void loop()
     i = 0;
   }
   digitalWrite(LED_BUILTIN, HIGH);
-  digitalWrite(21, HIGH);
+  // digitalWrite(21, HIGH);
 
   delay(1000);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(21, LOW);
+  // digitalWrite(21, LOW);
+
+  uint32_t Vbatt = 0;
+  for (int ii = 0; ii < 16; ii++)
+  {
+    Vbatt += analogReadMilliVolts(A0); // Read and accumulate ADC voltage
+  }
+  float Vbattf = 2 * Vbatt / 16 / 1000.0; // Adjust for 1:2 divider and convert to volts
+  Serial.println(Vbattf, 3);              // Output voltage to 3 decimal places
 
   delay(500);
 
