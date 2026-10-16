@@ -33,7 +33,7 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE); // 128x64 disp
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 128
 
-#define VERSION "27Sep2026"
+#define VERSION "4Okt2026"
 String version;
 
 // Initialize the command parsers using the start, end, delimiting characters
@@ -98,57 +98,109 @@ void handleUdp()
 
 #define LEFT_EYE_X 32
 #define LEFT_EYE_Y 68
-#define RIGHT_EYE_X (LEFT_EYE_X+16)
+#define RIGHT_EYE_X (LEFT_EYE_X + 16)
 #define RIGHT_EYE_Y 68
 
-#define NOSE_X (LEFT_EYE_X+8)
+#define NOSE_X (LEFT_EYE_X + 8)
 #define NOSE_Y 80
-
-#define txt_X 25
-#define txt_Y 19
 
 void eyes(int mood)
 {
+  char *TextString;
+
   u8g2.setDrawColor(1);
-  u8g2.drawBox(LEFT_EYE_X - 10, LEFT_EYE_Y - 10, 30, 40); // draw a filled box to clear the eyes
-  u8g2.setDrawColor(0);                                   // set draw color to black for the eyes and text
-  u8g2.drawBox(0, 0, SCREEN_WIDTH, 10);                   // clear the entire text area at the top of the display
+  u8g2.drawBox(LEFT_EYE_X - 4, LEFT_EYE_Y - 6, 30, 15); // draw a filled box to clear the eyes
+  u8g2.setDrawColor(0);                                 // set draw color to black for the eyes
 
   switch (mood)
   {
   case 0: // normal
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
-    u8g2.setDrawColor(1);
-  //  u8g2.drawStr(txt_X, txt_Y, "norm");
+    TextString = "NORMAL";
     break;
 
   case 1: // BLINK
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, 2);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
-    u8g2.setDrawColor(1);
-  //  u8g2.drawStr(txt_X, txt_Y, "blink");
+
+    TextString = "BLINK";
     break;
 
   case 2: // sleepy
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, 2);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, 2);
-    u8g2.setDrawColor(1);
-   // u8g2.drawStr(txt_X, txt_Y, "sleep");
+
+    TextString = "SLEEPY";
     break;
 
-  case 3: // angry
+  case 3: // down
     u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
     u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
-    u8g2.setDrawColor(1);
-   // u8g2.drawStr(txt_X, txt_Y, "angry");
+    TextString = "DOWN";
     break;
+
+  case 4: // angry
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.setDrawColor(1);
+    u8g2.drawTriangle(
+        LEFT_EYE_X - EYE_WIDTH - 1, LEFT_EYE_Y - EYE_HEIGHT,
+        LEFT_EYE_X + EYE_WIDTH + 1, LEFT_EYE_Y - EYE_HEIGHT,
+        LEFT_EYE_X + EYE_WIDTH + 1, LEFT_EYE_Y + 2);
+    u8g2.drawTriangle(
+        RIGHT_EYE_X - EYE_WIDTH - 1, RIGHT_EYE_Y - EYE_HEIGHT,
+        RIGHT_EYE_X + EYE_WIDTH + 1, RIGHT_EYE_Y - EYE_HEIGHT,
+        RIGHT_EYE_X - EYE_WIDTH - 1, RIGHT_EYE_Y + 2);
+    TextString = "ANGRY";
+    break;
+
+  case 5: // sad
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.setDrawColor(1);
+    u8g2.drawTriangle(
+        LEFT_EYE_X - EYE_WIDTH - 1, LEFT_EYE_Y + 2,
+        LEFT_EYE_X - EYE_WIDTH - 1, LEFT_EYE_Y - EYE_HEIGHT,
+        LEFT_EYE_X + EYE_WIDTH + 1, LEFT_EYE_Y - EYE_HEIGHT);
+    u8g2.drawTriangle(
+        RIGHT_EYE_X + EYE_WIDTH + 1, RIGHT_EYE_Y + 2,
+        RIGHT_EYE_X + EYE_WIDTH + 1, RIGHT_EYE_Y - EYE_HEIGHT,
+        RIGHT_EYE_X - EYE_WIDTH - 1, RIGHT_EYE_Y - EYE_HEIGHT);
+    TextString = "SAD";
+    break;
+
+  case 6: // develish
+    u8g2.drawFilledEllipse(LEFT_EYE_X, LEFT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.drawFilledEllipse(RIGHT_EYE_X, RIGHT_EYE_Y, EYE_WIDTH, EYE_HEIGHT);
+    u8g2.setDrawColor(1);
+    u8g2.drawTriangle(
+        LEFT_EYE_X - EYE_WIDTH - 1, LEFT_EYE_Y - EYE_HEIGHT - 1,
+        LEFT_EYE_X + EYE_WIDTH + 1, LEFT_EYE_Y - EYE_HEIGHT - 1,
+        LEFT_EYE_X + EYE_WIDTH + 1, LEFT_EYE_Y + EYE_HEIGHT + 1);
+    u8g2.drawTriangle(
+        RIGHT_EYE_X - EYE_WIDTH - 1, RIGHT_EYE_Y - EYE_HEIGHT - 1,
+        RIGHT_EYE_X + EYE_WIDTH + 1, RIGHT_EYE_Y - EYE_HEIGHT - 1,
+        RIGHT_EYE_X - EYE_WIDTH - 1, RIGHT_EYE_Y + EYE_HEIGHT + 1);
+    TextString = "DEVELISH";
+    break;
+
   default:
     break;
   }
   // nose
   u8g2.setDrawColor(0);
   u8g2.drawFilledEllipse(NOSE_X, NOSE_Y, 2, 4);
+
+// text
+#define txt_X 21
+#define txt_Y 12
+  u8g2.setDrawColor(0);                 // set draw color to black for the eyes and text
+  u8g2.drawBox(0, 0, SCREEN_WIDTH, txt_Y + 5); // clear the entire text area at the top of the display
+  u8g2.setDrawColor(1);
+  // u8g2.setFont(u8g2_font_7x13_tf);
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(txt_X, txt_Y, TextString);
 
   u8g2.sendBuffer();
 }
@@ -191,29 +243,9 @@ void setup()
   u8g2.clearBuffer();
 
   u8g2.setFlipMode(1); // flip the display vertically
-  //u8g2.setFont(u8g2_font_6x10_tf);
-  u8g2.setFont(u8g2_font_7x13_tf);
-  u8g2.setDrawColor(1);
-  //u8g2.drawStr(0, 10, "Hello R!");
-  // u8g2.drawEllipse(32, 16, 10, 10);
+
   u8g2.setDrawColor(0);
   u8g2.drawXBM(10, 20, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
-
-  // u8g2.clearDisplay();
-  u8g2.setDrawColor(0);
-  u8g2.setFont(u8g2_font_6x10_tf);
-
-  // u8g2.drawXBM( 10, 10, u8g_logo_width, u8g_logo_height, u8g_logo_bits);
-  //   u8g2.drawXBM(10, 40, 50, 83, bitmap_nabby_BW_50x83);
-
-  /*
-  #define test_width 16
-  #define test_height 7
-  static unsigned char test_bits[] = {
-  0x13, 0x00, 0x15, 0x00, 0x93, 0xcd, 0x55, 0xa5, 0x93, 0xc5, 0x00, 0x80,
-  0x00, 0x60 };
-  u8g2.drawXBM( 10, 10, test_width, test_height, test_bits);
-  */
 
   u8g2.sendBuffer();
 
@@ -227,7 +259,7 @@ void loop()
 {
   eyes(i);
   i++;
-  if (i > 3)
+  if (i > 5)
   {
     i = 0;
   }
@@ -244,7 +276,17 @@ void loop()
     Vbatt += analogReadMilliVolts(A0); // Read and accumulate ADC voltage
   }
   float Vbattf = 2 * Vbatt / 16 / 1000.0; // Adjust for 1:2 divider and convert to volts
-  Serial.println(Vbattf, 3);              // Output voltage to 3 decimal places
+
+  #define BATT_MIN 3.6
+  #define BATT_MAX 4.2
+  int barWidth = ((Vbattf - BATT_MIN) / (BATT_MAX - BATT_MIN)) * (SCREEN_WIDTH - 10); // Calculate the width of the battery bar based on voltage
+
+  Serial.printf("Battery Voltage: %.3f V   %d\n", Vbattf, barWidth);              // Output voltage to 3 decimal places
+
+  u8g2.setDrawColor(0);
+  u8g2.drawBox(10, SCREEN_HEIGHT - 10, SCREEN_WIDTH - 5, 10); // erase bar
+  u8g2.setDrawColor(1);
+  u8g2.drawBox(10, SCREEN_HEIGHT - 5, barWidth, 3); // draw a bar to indicate battery voltage
 
   delay(500);
 
