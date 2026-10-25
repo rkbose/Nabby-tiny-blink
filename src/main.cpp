@@ -34,7 +34,7 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE); // 128x64 disp
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 128
 
-#define VERSION "17Okt2026"
+#define VERSION "18Okt2026"
 String version;
 
 // Initialize the command parsers using the start, end, delimiting characters
@@ -279,11 +279,11 @@ void loop()
   }
   float Vbattf = 2 * Vbatt / 16 / 1000.0; // Adjust for 1:2 divider and convert to volts
 
-  #define BATT_MIN 3.6
+  #define BATT_MIN 3.3
   #define BATT_MAX 4.2
   int barWidth = ((Vbattf - BATT_MIN) / (BATT_MAX - BATT_MIN)) * (SCREEN_WIDTH - 10); // Calculate the width of the battery bar based on voltage
 
- // Serial.printf("Battery Voltage: %.3f V   %d\n", Vbattf, barWidth);              // Output voltage to 3 decimal places
+  Serial.printf("Battery Voltage: %.3f V   %d\n", Vbattf, barWidth);              // Output voltage to 3 decimal places
 
   u8g2.setDrawColor(0);
   u8g2.drawBox(10, SCREEN_HEIGHT - 10, SCREEN_WIDTH - 5, 10); // erase bar

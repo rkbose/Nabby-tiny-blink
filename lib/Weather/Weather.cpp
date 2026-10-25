@@ -63,7 +63,8 @@ void get_weather_data()
         String url = String("http://api.open-meteo.com/v1/forecast?latitude=" + latitude +
                             "&longitude=" + longitude +
                             "&current=temperature_2m,is_day,rain" +
-                            "&hourly=temperature_2m,relative_humidity_2m,is_day,precipitation,rain,weather_code" + 
+                            "&hourly=temperature_2m,is_day,weather_code" + 
+                           "&minutely_15=rain,temperature_2m" +
                             temperature_unit +
                             "&timezone=" + timezone +
                             "&forecast_days=1");
