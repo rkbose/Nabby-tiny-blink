@@ -21,20 +21,43 @@
 #include <Parsers.h>
 #include <Weather.h>
 
-#include <Wire.h>
-#include <U8g2lib.h>
+//#include <Wire.h> has been used for I2C monochrome display with U8g2lib
+//#include <U8g2lib.h>
 #include <Nabby.h>
 
-// U8G2_SH1106_64X32_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-// U8G2_SSD1306_64X48_ER_1_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-// U8G2_SSD1306_64X32_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE); // 128x64 display
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7789.h>
 
-/* WEMOS D1 mini OLED is a 0.49-inch display with a resolution of 64x32 pixels. Utilizes an SSD1306 */
+#include <SPI.h>
+
+//#define TFT_CS   5
+//#define TFT_DC   2
+//#define TFT_RST  3
+#define TFT_MOSI D10
+#define TFT_SCK  D8
+#define TFT_CS   D1
+#define TFT_DC   D2
+#define TFT_RST  D3
+
+#define BLACK   0x0000
+#define WHITE   0xFFFF
+#define RED     0xF800
+#define GREEN   0x07E0
+#define BLUE    0x001F
+#define YELLOW  0xFFE0
+#define CYAN    0x07FF
+#define MAGENTA 0xF81F
+
+// U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE); // 128x64 display. Used in the first version of Nabby blinking eyes with a 128x64 OLED display. 
+// The 128x64 display with SSD1306 controller is connected to the XIAO ESP32C6 board via I2C (SDA=22, SCL=23).
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 128
 
-#define VERSION "18Okt2026"
+// The Adafruit_ST7789 library is used for the 240x240 color TFT display with ST7789 controller, connected to the XIAO ESP32C6 board via SPI
+// Display type is: 1.3 inch IPS-TFT Display 240*240 pixels - SPI - ST7789V3 - 3.3V (Tinytronics) .
+Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+
+#define VERSION "30Okt2026"
 String version;
 
 // Initialize the command parsers using the start, end, delimiting characters
@@ -104,7 +127,7 @@ void handleUdp()
 
 #define NOSE_X (LEFT_EYE_X + 8)
 #define NOSE_Y 80
-
+/*
 void eyes(int mood)
 {
   char *TextString;
@@ -205,6 +228,7 @@ void eyes(int mood)
 
   u8g2.sendBuffer();
 }
+*/
 
 void setup()
 {
@@ -223,35 +247,63 @@ void setup()
 
   dcp_udp.addParser("inf", getInfo);
 
-  gpio_reset_pin(GPIO_NUM_22); // disable old pin function on GPIO22
-  gpio_reset_pin(GPIO_NUM_23); // disable old pin function on GPIO23
-  ;
-  gpio_set_drive_capability(GPIO_NUM_22, GPIO_DRIVE_CAP_2); // Set GPIO22 drive capability to default (medium)
-  ;
-  gpio_set_drive_capability(GPIO_NUM_23, GPIO_DRIVE_CAP_2); // Set GPIO23 drive capability to default (medium)
+  //gpio_set_drive_capability(GPIO_NUM_22, GPIO_DRIVE_CAP_2); // Set GPIO22 drive capability to default (medium)
+//  gpio_set_drive_capability(GPIO_NUM_23, GPIO_DRIVE_CAP_2); // Set GPIO23 drive capability to default (medium)
 
   pinMode(LED_BUILTIN, OUTPUT); // GPIO2 is connected to the on-board LED on the XIAO ESP32C6 board
   // pinMode(21, OUTPUT);          // GPIO21 is connected to the external LED connected to the XIAO ESP32C6 board
 
   pinMode(A0, INPUT); // Configure A0 as ADC input for Battery measurement
 
+  /*
+  gpio_reset_pin(GPIO_NUM_22); // disable old pin function on GPIO22
+  gpio_reset_pin(GPIO_NUM_23); // disable old pin function on GPIO23
   pinMode(22, OUTPUT); // SDA on the XIAO ESP32C6 board
   pinMode(23, OUTPUT); // SCL on the XIAO ESP32C6 board
+  Wire.begin(22, 23, 100000); // XIAO ESP32C6: SDA=22, SCL=23, 100kHz
 
-  Wire.begin(22, 23, 100000); // XIAO ESP32C6: SDA=6, SCL=7
   u8g2.setBusClock(100000);
   u8g2.begin();
   u8g2.clearBuffer();
 
   u8g2.setFlipMode(1); // flip the display vertically
-
   u8g2.setDrawColor(0);
   u8g2.drawXBM(10, 20, nabbyBW100x61_width, nabbyBW100x61_height, nabbyBW100x61_bits);
 
   u8g2.sendBuffer();
+*/
+
+  tft.init(240,240);
+  tft.fillScreen(BLACK);  
+  tft.setRotation(1);
+
+  tft.setTextSize(1);
+  tft.setCursor(5,10);
+  tft.setTextColor(WHITE, BLACK);
+  tft.println("Nabby-tiny - Hallo hallo" );
+
+  tft.setTextSize(2);
+  tft.setCursor(10,50);
+  tft.setTextColor(RED, BLACK);
+  tft.println("Rood" );
+
+  tft.setTextSize(3);
+  tft.setCursor(10,100);
+  tft.setTextColor(YELLOW, BLACK);
+  tft.println("Geel" );
+
+  //tft.drawGrayscaleBitmap(10, 120, nabbyBW100x61_bits, nabbyBW100x61_width, nabbyBW100x61_height);
+  tft.drawBitmap(10, 120, nabbyBW100x61_bits, nabbyBW100x61_width, nabbyBW100x61_height, WHITE);
+
+
+
+
 
   get_weather_data(); // get the weather data from the open-meteo API
   Serial.println("end of setup()");
+
+
+
 }
 
 int i = 0;
@@ -259,7 +311,7 @@ char c;
 
 void loop()
 {
-  eyes(i);
+ // eyes(i);
   i++;
   if (i > 5)
   {
@@ -285,11 +337,12 @@ void loop()
 
   Serial.printf("Battery Voltage: %.3f V   %d\n", Vbattf, barWidth);              // Output voltage to 3 decimal places
 
+  /*  
   u8g2.setDrawColor(0);
   u8g2.drawBox(10, SCREEN_HEIGHT - 10, SCREEN_WIDTH - 5, 10); // erase bar
   u8g2.setDrawColor(1);
   u8g2.drawBox(10, SCREEN_HEIGHT - 5, barWidth, 3); // draw a bar to indicate battery voltage
-
+*/
   delay(500);
 
   while (Serial.available() > 0)
